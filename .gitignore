@@ -20,4 +20,5 @@ wp-content/plugins/hello.php
 .project
 .settings/
 target/
-
+/20180822lambda_setting_review.pdf
+/S3_lambda_webAPI_flow.png
