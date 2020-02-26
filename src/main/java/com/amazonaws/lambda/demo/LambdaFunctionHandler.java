@@ -1,38 +1,70 @@
 package com.amazonaws.lambda.demo;
 
 
-import java.io.BufferedReader;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 
-import java.net.HttpURLConnection;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-
+import com.amazonaws.lambda.demo.http.RetrofitClient;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Response;
+/*
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3Client;
+*/
+
+/**
+ * Created by Willy Chen on 2019/07/10.
+ * @feature Use this lambda function to upload csv to server.
+ * @author Willy Chen
+ * @version v1.0.1
+ */
+
+
 public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 
+	/*
+	 BasicAWSCredentials creds = new BasicAWSCredentials("aws-access-key", "aws-secret-key");
+
+	    private AmazonS3 s3 =AmazonS3Client.builder()
+	    	    .withRegion("ap-northeast-1")
+	    	    .withCredentials(new AWSStaticCredentialsProvider(creds))
+	    	    .build();
+
+	    Region region = Region.getRegion(Regions.AP_NORTHEAST_1);
+
+    public LambdaFunctionHandler() {}
+
+    // Test purpose only.
+    LambdaFunctionHandler(AmazonS3 s3) {
+        this.s3 = s3;
+    }
+	*/
+	
 	/* **define value ** */
 	/* *Check file name* */
 	//private static final int d_CSV_FILE_NAME_LEN = 34;
-	private static final int d_CSV_FILE_DATE_LEN = 14;
-	private static final int d_CSV_FILE_SUFFIX_LENGTH = 4;
-	private static final int d_CSV_FILE_PREFIX_LENGTH = 4;
-	private static final String d_CSV_FILE_PREFIX = "csv/";
+	private static final int d_CSV_FILE_DATE_LEN = 17;
+	//private static final int d_CSV_FILE_SUFFIX_LENGTH = 4;
+	private static final int d_CSV_FILE_PREFIX_LENGTH = 18;
+	private static final String d_CSV_FILE_PREFIX = "FromArch/deliInst_";
 	private static final String d_CSV_FILE_SUFFIX = ".csv";
-	private static final String d_CSV_FILE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-	private static final String d_TARGET_CONN_URL = "http://218.211.35.215:8080/api/api_delivery.php";
+	private static final String d_CSV_FILE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss:SSS";
 	
 	/* *Error Code* */
 	private static final byte d_OK = 0x00;
@@ -45,29 +77,13 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 	
 
 
-	/* *SOMETHING* */
-	private static String d_LINE_FEED = "\r\n";
-	//private static String d_FONT ="UTF-8";
 
-	/* *POST Define* */
-	
-	private static  final String d_POST_HEADER_CONNECT = "keep-alive";
-	private static  final String d_POST_HEADER_CONTENT_TYPE = "multipart/form-data;";
-	private static  final String d_POST_HEADER_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8";
-	private static  final String d_POST_HEADER_ACCEPT_LANGUAGE = "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7";
-
-	private static  final String d_POST_BODY_CONTENT_TYPE = "application/octet-stream";
-	private static  final String d_POST_BODY_FILES_PARM = "Upload";
-	private static  final String d_POST_BODY_POST_PARM = "CMD";
-	private static  final String d_POST_BODY_USERNAME = "admin";
+	private static  final String d_POST_BODY_USERNAME = "lambda";
 	private static  final String d_POST_BODY_PASSWORD = "castles8418";
 	private static  final String d_POST_BODY_FUNCTION_NAME = "CREATEDELIVERY";
 	private static  final String d_POST_BODY_CREATEMODE = "2";
 
-	private static  final String d_CONN_URL_REQUEST_METHOD = "POST";
 
-	private static  final String d_POST_BOUNDARY = "----WebKitFormBoundary"+Long.toHexString(System.currentTimeMillis());
-	
 	/* **Process ** */
 	 
 	private static  final String d_TAG_CHECK_FILENAME = "CHECK FILE NAME：";
@@ -75,11 +91,14 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 	private static  final String d_PROCESS_CHECK_END = "------Check File Name End------";
 	private static  final String d_PROCESS_CHECK_CORRECT = "---File Name Correct---";
 	private static  final String d_PROCESS_POST = "------Start Post to URL------";
-	private static  final String d_POST_STATUS = "HTTP POST Status:";
+
 
 	
 	 
 	private static String d_STATUS = "Return Code:";
+	private  String strCSVConText;
+	private String strFileName;
+
 	/* **handle ** */
 	/* **lambda process beginning point ** */
     @Override
@@ -90,9 +109,18 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
         //context.getLogger().log("Received event: " + event);
         //context.getLogger().log("Event Detail: " + event.toJson());
         // Get the object from the event and show its content type
-        String bucket = event.getRecords().get(0).getS3().getBucket().getName();
-        String key = event.getRecords().get(0).getS3().getObject().getKey();
-        String strFileName=null;
+        String bucket =null;
+        String key =null;
+        
+        try {
+        	bucket = event.getRecords().get(0).getS3().getBucket().getName();
+            key = event.getRecords().get(0).getS3().getObject().getKey();
+            strFileName=null;
+        }
+        catch(Exception e) {
+        	e.printStackTrace();
+        	context.getLogger().log("Log:" + e.toString());
+        }
         
         
     	/* **Check File Name** */
@@ -101,10 +129,15 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
         if(!key.isEmpty()) {
         	if(key.startsWith(d_CSV_FILE_PREFIX)) {
 				if(key.endsWith(d_CSV_FILE_SUFFIX)) {
+					//key = csv/ 20180815101116 _deliInst.csv
+					//key NEW ="csv/ deliInst_20180720101112333.csv"; //20181020
+					//strData =subSequence( 4, 4+14)
+					//strData NEW=subSequence( 13, 13+17) //20181020
 					String strData = (String) key.subSequence(d_CSV_FILE_PREFIX_LENGTH,d_CSV_FILE_PREFIX_LENGTH+d_CSV_FILE_DATE_LEN);
+					
 					strFileName =(String) key.substring(d_CSV_FILE_PREFIX_LENGTH);
-					//System.out.println("S3FileName:"+strFileName);	
-					//System.out.println(strData);	
+					System.out.println("S3FileName:"+strFileName);	
+					System.out.println(strData);	
 					
 					if(strData.length()==d_CSV_FILE_DATE_LEN) {
 						try {
@@ -121,7 +154,9 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 									":"+
 									strData.subSequence(10,12)+
 									":"+
-									strData.subSequence(12,14);
+									strData.subSequence(12,14)+
+									":"+
+									strData.subSequence(14,17);
 							//System.out.println(Data);
 							
 							sdfCSVDate.parse(Data);
@@ -157,93 +192,51 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 		}
      
         /* **Connect to http server  ** */
-        if(bReturnCode ==d_OK) {
-        	
-        	
         
+        if(bReturnCode ==d_OK) {
+            AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
+  	        strCSVConText = s3Client.getObjectAsString(bucket, key)
+ 	        		.replaceAll("((\r\n)|\n)[\\s\t ]*(\\1)+", "$1")
+ 	        		.replaceAll("^((\r\n)|\n)", "").trim();
         	
-      
-        	context.getLogger().log(d_PROCESS_POST);
-        	try{
-            	 
-        		int iRespondCode;
-        		StringBuilder postData = new StringBuilder();
-     			HttpURLConnection connection = null;
-     			//String strBoundary = "----WebKitFormBoundary"+Long.toHexString(System.currentTimeMillis());
-     	        URL url = new URL(d_TARGET_CONN_URL);
-     	        
-     	        /* *Get Data from S3* */
-     	        AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
-     	        //S3Object object = s3Client.getObject(new GetObjectRequest(bucket,key));
-     	        //InputStream objectData = object.getObjectContent();
-     	        String strCSVConText = s3Client.getObjectAsString(bucket, key);
-     	        
-     	        
-     			connection = (HttpURLConnection)  url.openConnection();
-     			
-     			
-     			
-     			/* *package header * */
-     			connection.setRequestMethod(d_CONN_URL_REQUEST_METHOD);
-     			connection.setDoOutput(true);
-     			connection.setDoInput(true);
-     			connection.setUseCaches(false); 
-     			connection.setRequestProperty("Connection", d_POST_HEADER_CONNECT);
-     			connection.setRequestProperty("Content-Type",d_POST_HEADER_CONTENT_TYPE +" boundary="+d_POST_BOUNDARY);
-     			connection.setRequestProperty("Accept",d_POST_HEADER_ACCEPT);
-     			connection.setRequestProperty("Accept-Language",d_POST_HEADER_ACCEPT_LANGUAGE); 
-     					   
-     			
-     			/* *package body * */
-     			postData.append("--" + d_POST_BOUNDARY).append(d_LINE_FEED);
-     		    postData.append("Content-Disposition: form-data;" + " name="+"\""+d_POST_BODY_FILES_PARM +"\"; filename=\"" + strFileName+ "\"").append(d_LINE_FEED);
-     		    postData.append("Content-Type:"+d_POST_BODY_CONTENT_TYPE);
-     		    postData.append(d_LINE_FEED);
-     		    postData.append(d_LINE_FEED);
-     		    postData.append(strCSVConText).append(d_LINE_FEED);;
-     		    postData.append("--" + d_POST_BOUNDARY).append(d_LINE_FEED);
-     		    postData.append("Content-Disposition: form-data;"+"name="+d_POST_BODY_POST_PARM).append(d_LINE_FEED).append(d_LINE_FEED);
-     		    postData.append("{\"Authority\":{\"UserName\":"+"\""+d_POST_BODY_USERNAME+"\",\"Password\":\""+d_POST_BODY_PASSWORD+"\"},\"FuncName\":\""+d_POST_BODY_FUNCTION_NAME+"\",\"CreateMode\":"+d_POST_BODY_CREATEMODE+"}");
-     		   
-    		    byte[] postDataBytes = postData.toString().getBytes("UTF-8");
-    		    connection.getOutputStream().write(postDataBytes);
-    		    
-    		    
-    		    iRespondCode = connection.getResponseCode();
-        		if(iRespondCode==200) {
-        			context.getLogger().log(d_POST_STATUS + iRespondCode);
-        			StringBuffer strBuf = new StringBuffer();  
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));  
-                    String line = null;  
-                    while ((line = reader.readLine()) != null) {  
-                        strBuf.append(line).append("\n");  
-                    }  
-                    
-                    System.out.println("POST Responed:"+strBuf);
-        		}else {
-        			context.getLogger().log(d_POST_STATUS + iRespondCode);
-            	}
-        			 
-    		}catch (MalformedURLException e1) {
-    			context.getLogger().log("------MalformedURLException------");
-    			e1.printStackTrace();
-    			context.getLogger().log("------END------");
-    		}catch (IOException e2) {
-    			context.getLogger().log("------IOException------");
-    			e2.printStackTrace();
-    			context.getLogger().log("------END------");
+        	
+        	RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("CMD",
+                    		"{\"Authority\":{\"UserName\":"+"\""+d_POST_BODY_USERNAME+"\","
+                    				+ "\"Password\":\""+d_POST_BODY_PASSWORD+"\"},"
+                    						+ "\"FuncName\":\""+d_POST_BODY_FUNCTION_NAME+"\","
+                    								+ "\"CreateMode\":"+d_POST_BODY_CREATEMODE+"}")
+                    .addFormDataPart("Upload", strFileName, RequestBody.create(MediaType.parse("text/csv"),
+                    		strCSVConText))
+                    .build();
 
-    		}catch (Exception  e3) {
-     			context.getLogger().log("------Exception------");
-     			e3.printStackTrace();
-    			context.getLogger().log("------END------");
+            context.getLogger().log(d_PROCESS_POST);
 
-     		}
-             
+        	
+        	Call<String> call = null;
+            call = RetrofitClient.httpCSV().postCSV(requestBody);
+
+            try {
+            	Response<String> response = call.execute();
+            	System.out.print("My response : \r\n"+response.body().toString()+"\r\n");
+            
+     
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+
+			}
+
+           
         }else {
 			context.getLogger().log(d_STATUS+ bReturnCode);
 		}
         
+  
+    	context.getLogger().log("lambda end!");
+
         return "lambda end!";
     }
+  
 }
