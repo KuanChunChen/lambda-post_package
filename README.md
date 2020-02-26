@@ -1,2 +1,3 @@
-# lambda-post_package
-This function can help you in AWS Service lambda to post package to your assigin IP.
+# NTTData_Lambda_S3
+
+Implement the lambda event if store a new delivery csv to S3

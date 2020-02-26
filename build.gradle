@@ -1,0 +1,29 @@
+apply plugin: 'java'
+
+dependencies {
+    compile fileTree(dir: 'jars', include: '*.jar')
+}
+
+def static releaseTime() {
+    return new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("Asia/Shanghai"))
+}
+
+
+
+task makeJar(type: Jar,dependsOn: ['buildClean']){
+	
+    archiveName = releaseTime()+'_Lambda_s3_v1.0.3.jar'
+	from compileJava
+	from processResources
+	into('lib') {
+        from configurations.runtimeClasspath
+    }
+	destinationDir = file('build/libs')
+}
+
+task buildClean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+build.dependsOn makeJar
+
