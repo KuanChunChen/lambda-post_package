@@ -7,13 +7,27 @@ import java.io.IOException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import com.amazonaws.lambda.demo.http.RetrofitClient;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+/*
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3Client;
+*/
+
+/**
+ * Created by Willy Chen on 2019/07/10.
+ * @feature Use this lambda function to upload csv to server.
+ * @author Willy Chen
+ * @version v1.0.3
+ */
+
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -65,7 +79,6 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 	private static final String d_CSV_FILE_PREFIX = "FromArch/deliInst_";
 	private static final String d_CSV_FILE_SUFFIX = ".csv";
 	private static final String d_CSV_FILE_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss:SSS";
-	
 	/* *Error Code* */
 	private static final byte d_OK = 0x00;
 	private static final byte d_DATE_FORMAT_ERROR = 0x01;
@@ -74,15 +87,10 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 	private static final byte d_FILE_SUFFIX_ERROR = 0x04;
 	private static final byte d_FILE_DATE_LEN_ERROR = 0x05;
 	
-	
-
-
-
 	private static  final String d_POST_BODY_USERNAME = "lambda";
 	private static  final String d_POST_BODY_PASSWORD = "castles8418";
 	private static  final String d_POST_BODY_FUNCTION_NAME = "CREATEDELIVERY";
 	private static  final String d_POST_BODY_CREATEMODE = "2";
-
 
 	/* **Process ** */
 	 
@@ -111,6 +119,18 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
         // Get the object from the event and show its content type
         String bucket =null;
         String key =null;
+
+        
+        try {
+        	bucket = event.getRecords().get(0).getS3().getBucket().getName();
+            key = event.getRecords().get(0).getS3().getObject().getKey();
+            strFileName=null;
+        }
+        catch(Exception e) {
+        	e.printStackTrace();
+        	context.getLogger().log("Log:" + e.toString());
+        }
+
         
         try {
         	bucket = event.getRecords().get(0).getS3().getBucket().getName();
@@ -229,7 +249,7 @@ public class LambdaFunctionHandler implements RequestHandler<S3Event, String> {
 			}
 
            
-        }else {
+         }else {
 			context.getLogger().log(d_STATUS+ bReturnCode);
 		}
         

@@ -1,0 +1,24 @@
+「Lambda_s3 auto generate JAR file user manual」
+
+Step.
+1.
+Click the ”Nttd_lambda_s3_makeJar.bat” just in one button,
+then .bat file will help you to generate Jar file automatically.
+
+2.
+Then open path ../build/libs ,you can see the Jar file already 
+generated.
+
+
+
+「Lambda_s3 自動生成JAR檔說明」
+步驟 
+1.
+一鍵點擊 「Nttd_lambda_s3_makeJar.bat」檔案
+則會自動產生Jar file.
+
+2.
+打開自動產生的目錄 ../build/libs，則可以看到自動產生的JAR檔案
+
+
+

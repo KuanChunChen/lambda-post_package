@@ -19,6 +19,6 @@ wp-content/plugins/hello.php
 .classpath
 .project
 .settings/
+log/
 target/
-/20180822lambda_setting_review.pdf
-/S3_lambda_webAPI_flow.png
+dependency-reduced-pom.xml
