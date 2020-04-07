@@ -22,3 +22,6 @@ wp-content/plugins/hello.php
 log/
 target/
 dependency-reduced-pom.xml
+build/
+.gradle/
+*.DS_Store
