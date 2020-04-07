@@ -1,13 +1,17 @@
-# Preface
+AWS Lambda 
+========================
+
+Preface
 ----------
-This project contain the aws lambda function and it can trigger when some event is happened.
-Also,there are extra shell for user to auto generate Jar file which AWS Lambda need you to upload it. 
+This project contain the aws lambda function and it can trigger when some event is happened.  
+Also,there are extra shell for user to auto generate Jar file which AWS Lambda need you to upload it.
 
 **This demo also improve the input effective by auto post instead of manual.** 
 
-# Structure
+Structure
 ----------
-photo 
+
+![AWS_LAMBDA_DEMO_Flow](https://github.com/KuanChunChen/MyGitHubImage/blob/develop/aws/S3_lambda_flow.png)
 
 * This demo function following above photo step from 1 to 3.
   * Step1. Some event happened and Lambda was triggered.
@@ -16,14 +20,14 @@ photo
 
 * The **PUT** means some people upload the file to S3 bucket.
 
-# Library
+Library
 ----------
   * [AWS Lambda API.](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
   * Connect to server with [okhttp3](https://square.github.io/okhttp/) and [retrofit2](https://square.github.io/retrofit/).
   * [Gradle](https://gradle.org/).
   * Linux shell or dos Script.
 
-# Features
+Features
 ----------
   * Use AWS Lambda API to get event,for example :
     * Implement the **RequestHandler** and override **handleRequest**.
@@ -66,15 +70,21 @@ photo
     * Mac 
      You should open the Terminal from MacOs and type the order ```./Lambda_s3_makeJar.sh```.
 
-# Hints
+Hints
 ----------
  * Use bolow code to show log from AWS Cloudwatch.
      ```
      context.getLogger().log("somthing...");
      ```
     (The object **context** here is from AWS override function.)
+    ![AWS_LAMBDA_DEMO_Cloudwatch](https://github.com/KuanChunChen/MyGitHubImage/blob/master/aws/aws_cloudwatch.png)
+
     
- * How to upload your AWS Lambda function.
-   
+ * How to upload your AWS Lambda function �
+   *Just follow the office tutorial to create Lambda function.
+       ![AWS_LAMBDA_DEMO_CREAT](https://github.com/KuanChunChen/MyGitHubImage/blob/develop/aws/creatLambda.png)
+
+   *Then,when you see following screen ,you just need take the Jar file you build before and upload it.
+       ![AWS_LAMBDA_DEMO_CREAT](https://github.com/KuanChunChen/MyGitHubImage/blob/develop/aws/upload.png)
 
 
