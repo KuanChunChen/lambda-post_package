@@ -80,11 +80,11 @@ Hints
     ![AWS_LAMBDA_DEMO_Cloudwatch](https://github.com/KuanChunChen/MyGitHubImage/blob/master/aws/aws_cloudwatch.png)
 
     
- * How to upload your AWS Lambda function �
-   *Just follow the office tutorial to create Lambda function.
+ * How to upload your AWS Lambda function �  
+   * Just follow the office tutorial to create Lambda function.
        ![AWS_LAMBDA_DEMO_CREAT](https://github.com/KuanChunChen/MyGitHubImage/blob/develop/aws/creatLambda.png)
 
-   *Then,when you see following screen ,you just need take the Jar file you build before and upload it.
+   * Then,when you see following screen ,you just need take the Jar file you build before and upload it.
        ![AWS_LAMBDA_DEMO_CREAT](https://github.com/KuanChunChen/MyGitHubImage/blob/develop/aws/upload.png)
 
 
