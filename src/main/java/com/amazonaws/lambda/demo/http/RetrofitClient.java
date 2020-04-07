@@ -69,7 +69,7 @@ public class RetrofitClient {
     }
 
     public static AppApi httpCSV() {
-        return httpCSV(Constants.Http.HTTP_SERVER_TARGET_CONN_URL);
+        return httpCSV(Constants.Http.HTTP_SERVER);
     }
 
  
